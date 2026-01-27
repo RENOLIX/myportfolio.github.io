@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemagique - Mouhammou</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <!-- AJOUT de ScrollTrigger pour l'effet de texte -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <!-- Script pour charger Spline -->
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.71/build/spline-viewer.js"></script>
+    <style>
+        :root {
+            --star-color: #B19EEF;
+            --bg-dark: #050505;
+            --card-bg: #0c0c0c;
+
+            /* Ajouts pour le nouveau header/bento */
+            --purple-primary: rgba(132, 0, 255, 1);
+            --purple-glow: rgba(132, 0, 255, 0.2);
+            --purple-border: rgba(132, 0, 255, 0.8);
+            --border-color: #392e4e;
+            --background-dark: #060010;
+            --white: #fff;
+
+            /* Variables pour la section Profil */
+            --pc-pointer-x: 50%;
+            --pc-pointer-y: 50%;
+            --pc-rotate-x: 0deg;
+            --pc-rotate-y: 0deg;
+            --pc-card-opacity: 0;
+            --behind-glow-color: rgba(132, 0, 255, 0.67);
+            --inner-gradient: linear-gradient(145deg, #60496e8c 0%, #71C4FF44 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- CANVAS SPLASH CURSOR --- */
+        #splash-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 10;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 140px 0 100px;
+            position: relative;
+            border-radius: 24px;
+            background: transparent;
+            /* Correctifs pour supprimer les bordures/coins noirs sur mobile */
+            overflow: hidden;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            -webkit-backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
+        }
+
+        /* Background Spline optimisé */
+        header spline-viewer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% + 70px); /* Augmenté pour cacher le logo Spline plus efficacement */
+            z-index: 0;
+            pointer-events: auto;
+            background: transparent !important;
+        }
+
+        h1 {
+            position: relative;
+            z-index: 2;
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(to bottom, #fff 30%, var(--purple-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            pointer-events: none;
+        }
+
+        .hero-sub {
+            position: relative;
+            z-index: 2;
+            font-size: 1.2rem;
+            opacity: 0.6;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        .hero-desc {
+            position: relative;
+            z-index: 2;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        section {
+            margin-bottom: 120px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: var(--star-color);
+            text-transform: uppercase;
+        }
+
+        /* --- LE STAR BORDER --- */
+        .star-border {
+            position: relative;
+            padding: 2px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .star-border::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0%,
+                transparent 40%,
+                var(--star-color) 50%,
+                transparent 60%,
+                transparent 100%
+            );
+            animation: rotateStar 4s linear infinite;
+            transform-origin: center;
+            z-index: 0;
+            translate: -50% -50%;
+        }
+
+        @keyframes rotateStar {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+            background: var(--card-bg);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 250px;
+            border: none;
+            background: #111;
+        }
+
+        .iframe-3d {
+            height: 300px;
+        }
+
+        .site-info {
+            padding: 12px;
+            font-size: 0.85rem;
+            text-align: center;
+            background: #151515;
+            border-top: 1px solid #222;
+            color: #aaa;
+        }
+
+/* --- MAGIC BENTO --- */
+.card-grid {
+  display: grid;
+  gap: 0.6em;
+  padding: 0.75em;
+  max-width: 60em;
+  margin: 0 auto;
+  font-size: clamp(0.95rem, 0.85rem + 0.4vw, 1.2rem);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.magic-bento-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 170px;
+  width: 100%;
+  padding: 1em;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--background-dark);
+  font-weight: 300;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 200px;
+  text-decoration: none;
+}
+
+.magic-bento-card__header,
+.magic-bento-card__content {
+  display: flex;
+  position: relative;
+  color: var(--white);
+}
+
+.magic-bento-card__header { justify-content: space-between; }
+.magic-bento-card__content { flex-direction: column; }
+.magic-bento-card__label { font-size: 12px; letter-spacing: 1px; opacity: 0.7; text-transform: uppercase; }
+.magic-bento-card__title { font-weight: 500; font-size: 14px; margin: 0 0 0.25em; }
+.magic-bento-card__description { font-size: 11px; line-height: 1.25; opacity: 0.9; margin: 0; }
+
+.magic-bento-card__title,
+.magic-bento-card__description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.magic-bento-card__title { -webkit-line-clamp: 1; }
+.magic-bento-card__description { -webkit-line-clamp: 2; }
+
+.magic-bento-card--border-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 6px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(132, 0, 255, calc(var(--glow-intensity) * 0.8)) 0%,
+    rgba(132, 0, 255, calc(var(--glow-intensity) * 0.4)) 30%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.magic-bento-card--border-glow:hover {
+  box-shadow: 0 4px 20px rgba(46, 24, 78, 0.4), 0 0 30px var(--purple-glow);
+}
+
+.particle-container { position: relative; overflow: hidden; }
+.particle::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: rgba(132, 0, 255, 0.2);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.global-spotlight {
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  z-index: 200 !important;
+  pointer-events: none;
+}
+
+.bento-section { position: relative; user-select: none; }
+
+/* --- NOUVEAU STYLE : SECTION PROFIL --- */
+.profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 0;
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 50px;
+    width: 100%;
+    max-width: 1100px;
+}
+
+.pc-card-wrapper {
+    perspective: 1000px;
+    position: relative;
+    width: 300px;
+    flex-shrink: 0;
+    z-index: 5;
+}
+
+.pc-behind {
+    position: absolute;
+    inset: -40px;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+        circle at var(--pc-pointer-x) var(--pc-pointer-y),
+        var(--behind-glow-color) 0%,
+        transparent 50%
+    );
+    filter: blur(50px);
+    opacity: var(--pc-card-opacity);
+    transition: opacity 0.3s ease;
+}
+
+.pc-card {
+    height: 420px;
+    border-radius: 25px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.9);
+    transform-style: preserve-3d;
+    transform: rotateX(var(--pc-rotate-y)) rotateY(var(--pc-rotate-x));
+    transition: transform 0.1s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pc-inside {
+    position: absolute;
+    inset: 0;
+    background-image: var(--inner-gradient);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 20px;
+}
+
+.pc-avatar-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+    mix-blend-mode: luminosity;
+    pointer-events: none;
+}
+
+.pc-user-info {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pc-text h3 { margin: 0; font-size: 1rem; color: #fff; }
+.pc-text p { margin: 0; font-size: 0.7rem; opacity: 0.7; }
+
+.pc-contact-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.right-content {
+    flex: 1;
+}
+
+.scroll-float {
+    overflow: hidden;
+    margin: 0;
+}
+
+.scroll-float-text-container {
+    display: inline-block;
+    font-size: clamp(1.5rem, 4vw, 3.5rem);
+    font-weight: 900;
+    text-align: left;
+    line-height: 1.1;
+    color: #fff;
+}
+
+.char {
+    display: inline-block;
+    will-change: opacity, transform;
+}
+
+@media (max-width: 900px) {
+    .content-wrapper { flex-direction: column; text-align: center; }
+    .scroll-float-text-container { text-align: center; }
+    .pc-card-wrapper { margin: 0 auto; }
+}
+
+@media (max-width: 768px) {
+    header { border-radius: 0; }
+}
+
+        footer {
+            text-align: center;
+            padding: 60px 0;
+            opacity: 0.3;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="splash-canvas"></canvas>
+
+    <div class="main-container">
+        <header>
+            <spline-viewer 
+                url="https://prod.spline.design/QJYKkmXBfzYcfVTe/scene.splinecode"
+                hint="false"
+                loading-reveal="true">
+            </spline-viewer>
+            
+            <p class="hero-sub">Mouhammou Abdelghani — 27 Ans</p>
+            <h1>SITEMAGIQUE</h1>
+            <p class="hero-desc">Basé à Alger • Créateur d'Immersions Digitales</p>
+        </header>
+
+        <section>
+            <h2 class="section-title">EXPÉRIENCES 3D</h2>
+            <div class="grid">
+                <div class="star-border">
+                    <div class="card-content">
+                        <iframe class="iframe-container iframe-3d" src="https://my.spline.design/clonemess-9a646c8270914e6b54a01c809618175d/"></iframe>
+                        <div class="site-info">Modèle Interactif 01</div>
+                    </div>
+                </div>
+                <div class="star-border">
+                    <div class="card-content">
+                        <iframe class="iframe-container iframe-3d" src="https://my.spline.design/abstractgradientanimation-769039600e95c1a70014a0186940d959/"></iframe>
+                        <div class="site-info">Modèle Interactif 02</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="bento-section" class="bento-section">
+          <h2 class="section-title">NOS RÉALISATIONS</h2>
+          <div class="card-grid" id="bento-grid">
+            <a href="https://maillotalgerie.store" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">E-Commerce Elite</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">Maillot Algerie</h3>
+                <p class="magic-bento-card__description">Boutique premium d'équipements sportifs avec interface fluide.</p>
+              </div>
+            </a>
+        
+            <a href="https://inaratistore.com" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">Design & Lumière</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">Inarati Store</h3>
+                <p class="magic-bento-card__description">Expérience shopping pour luminaires haut de gamme.</p>
+              </div>
+            </a>
+        
+            <a href="https://taxival-disere.com" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">Service VIP</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">Taxi Val d'Isère</h3>
+                <p class="magic-bento-card__description">Réservation de transport de luxe en station de ski.</p>
+              </div>
+            </a>
+        
+            <a href="https://divineglowdz.com" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">Cosmétique</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">Divine Glow</h3>
+                <p class="magic-bento-card__description">Le futur de la beauté en Algérie.</p>
+              </div>
+            </a>
+        
+            <a href="https://dzrags.com" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">Fashion</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">DZ Rags</h3>
+                <p class="magic-bento-card__description">Streetwear algérien nouvelle génération.</p>
+              </div>
+            </a>
+        
+            <a href="https://ihcenbeauty.com" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">Esthétique</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">Ihcen Beauty</h3>
+                <p class="magic-bento-card__description">Plateforme de soins et cosmétiques personnalisés.</p>
+              </div>
+            </a>
+        
+            <a href="https://malekstrecture.com" target="_blank" class="magic-bento-card">
+              <div class="magic-bento-card__header">
+                <div class="magic-bento-card__label">Architecture</div>
+              </div>
+              <div class="magic-bento-card__content">
+                <h3 class="magic-bento-card__title">Malek Structure</h3>
+                <p class="magic-bento-card__description">Solutions de construction et structures innovantes.</p>
+              </div>
+            </a>
+          </div>
+        </section>
+
+        <!-- AJOUT : BLOC À PROPOS -->
+        <section class="profile-section">
+            <h2 class="section-title">À PROPOS DE MOI</h2>
+            <div class="content-wrapper">
+                <div class="pc-card-wrapper" id="profileCard">
+                    <div class="pc-behind"></div>
+                    <div class="pc-card">
+                        <div class="pc-inside">
+                            <img class="pc-avatar-img" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop" alt="Avatar">
+                            <div class="pc-user-info">
+                                <div class="pc-text">
+                                    <h3>Mouhammou Abdelghani</h3>
+                                    <p>Software Engineer</p>
+                                </div>
+                                <button class="pc-contact-btn" onclick="alert('contact@sitemagique.com')">Contact</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="right-content">
+                    <h2 class="scroll-float" id="scrollFloatText">
+                        DÉVELOPPEUR PASSIONNÉ PAR LE CODE ET LES EXPÉRIENCES NUMÉRIQUES UNIQUES.
+                    </h2>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            PROJET SITEMAGIQUE - TOUS DROITS RÉSERVÉS
+        </footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('splash-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+        class Particle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 8 + 2;
+                this.speedX = Math.random() * 3 - 1.5;
+                this.speedY = Math.random() * 3 - 1.5;
+                this.color = `hsla(${Math.random() * 60 + 250}, 80%, 70%, 0.8)`;
+                this.life = 1;
+            }
+            update() { this.x += this.speedX; this.y += this.speedY; this.life -= 0.02; if (this.size > 0.1) this.size -= 0.1; }
+            draw() { ctx.fillStyle = this.color; ctx.globalAlpha = this.life; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+        }
+        const mouse = { x: null, y: null };
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX; mouse.y = e.clientY;
+            for (let i = 0; i < 3; i++) { particles.push(new Particle(mouse.x, mouse.y)); }
+        });
+        window.addEventListener('click', (e) => { for (let i = 0; i < 20; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2); ctx.fill();
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(); particles[i].draw();
+                if (particles[i].life <= 0) { particles.splice(i, 1); i--; }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+
+    <script>
+/* === MAGIC BENTO VANILLA (TA LOGIQUE INTACTE) === */
+const MagicBentoConfig = {
+  textAutoHide: true, enableStars: true, enableSpotlight: true, enableBorderGlow: true,
+  enableTilt: false, enableMagnetism: false, clickEffect: true, spotlightRadius: 400,
+  particleCount: 12, glowColor: '132, 0, 255', disableAnimations: false
+};
+const grid = document.getElementById('bento-grid');
+const cards = grid ? Array.from(grid.querySelectorAll('.magic-bento-card')) : [];
+const MOBILE_BREAKPOINT = 768;
+const isMobile = () => window.innerWidth <= MOBILE_BREAKPOINT;
+const shouldDisable = () => MagicBentoConfig.disableAnimations || isMobile();
+const particleState = new WeakMap();
+const createParticleElement = (x, y, color) => {
+  const el = document.createElement('div'); el.className = 'particle';
+  el.style.cssText = `position: absolute; width: 4px; height: 4px; border-radius: 50%; background: rgba(${color}, 1); box-shadow: 0 0 6px rgba(${color}, 0.6); pointer-events: none; z-index: 100; left: ${x}px; top: ${y}px;`;
+  return el;
+};
+const calculateSpotlightValues = radius => ({ proximity: radius * 0.5, fadeDistance: radius * 0.75 });
+const updateCardGlowProperties = (card, mouseX, mouseY, glow, radius) => {
+  const rect = card.getBoundingClientRect();
+  const relativeX = ((mouseX - rect.left) / rect.width) * 100;
+  const relativeY = ((mouseY - rect.top) / rect.height) * 100;
+  card.style.setProperty('--glow-x', `${relativeX}%`); card.style.setProperty('--glow-y', `${relativeY}%`);
+  card.style.setProperty('--glow-intensity', glow.toString()); card.style.setProperty('--glow-radius', `${radius}px`);
+};
+cards.forEach(card => {
+  if (MagicBentoConfig.textAutoHide) card.classList.add('magic-bento-card--text-autohide');
+  if (MagicBentoConfig.enableBorderGlow) card.classList.add('magic-bento-card--border-glow');
+  if (MagicBentoConfig.enableStars) card.classList.add('particle-container');
+  particleState.set(card, { particles: [], timeouts: [], memoized: [], initialized: false });
+  const initParticles = () => {
+    const state = particleState.get(card); if (state.initialized) return;
+    const { width, height } = card.getBoundingClientRect();
+    state.memoized = Array.from({ length: MagicBentoConfig.particleCount }, () => createParticleElement(Math.random() * width, Math.random() * height, MagicBentoConfig.glowColor));
+    state.initialized = true;
+  };
+  const clearParticles = () => {
+    const state = particleState.get(card); state.timeouts.forEach(t => clearTimeout(t)); state.timeouts = [];
+    state.particles.forEach(p => { gsap.to(p, { scale: 0, opacity: 0, duration: 0.3, ease: 'back.in(1.7)', onComplete: () => p.parentNode && p.parentNode.removeChild(p) }); });
+    state.particles = [];
+  };
+  const animateParticles = () => {
+    if (!MagicBentoConfig.enableStars || shouldDisable()) return;
+    const state = particleState.get(card); initParticles();
+    state.memoized.forEach((particle, i) => {
+      const t = setTimeout(() => {
+        const clone = particle.cloneNode(true); card.appendChild(clone); state.particles.push(clone);
+        gsap.fromTo(clone, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.7)' });
+        gsap.to(clone, { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100, rotation: Math.random() * 360, duration: 2 + Math.random() * 2, ease: 'none', repeat: -1, yoyo: true });
+        gsap.to(clone, { opacity: 0.3, duration: 1.5, ease: 'power2.inOut', repeat: -1, yoyo: true });
+      }, i * 100); state.timeouts.push(t);
+    });
+  };
+  card.addEventListener('mouseenter', () => { if (shouldDisable()) return; animateParticles(); });
+  card.addEventListener('mouseleave', () => { if (shouldDisable()) return; clearParticles(); });
+  card.addEventListener('click', e => {
+    if (!MagicBentoConfig.clickEffect || shouldDisable()) return;
+    const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+    const maxDistance = Math.max(Math.hypot(x, y), Math.hypot(x - rect.width, y), Math.hypot(x, y - rect.height), Math.hypot(x - rect.width, y - rect.height));
+    const ripple = document.createElement('div');
+    ripple.style.cssText = `position: absolute; width: ${maxDistance * 2}px; height: ${maxDistance * 2}px; border-radius: 50%; background: radial-gradient(circle, rgba(${MagicBentoConfig.glowColor}, 0.4) 0%, rgba(${MagicBentoConfig.glowColor}, 0.2) 30%, transparent 70%); left: ${x - maxDistance}px; top: ${y - maxDistance}px; pointer-events: none; z-index: 1000;`;
+    card.appendChild(ripple);
+    gsap.fromTo(ripple, { scale: 0, opacity: 1 }, { scale: 1, opacity: 0, duration: 0.8, ease: 'power2.out', onComplete: () => ripple.remove() });
+  });
+});
+if (MagicBentoConfig.enableSpotlight && grid) {
+  const spotlight = document.createElement('div'); spotlight.className = 'global-spotlight';
+  spotlight.style.cssText = `position: fixed; width: 800px; height: 800px; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(${MagicBentoConfig.glowColor}, 0.15) 0%, rgba(${MagicBentoConfig.glowColor}, 0.08) 15%, rgba(${MagicBentoConfig.glowColor}, 0.04) 25%, rgba(${MagicBentoConfig.glowColor}, 0.02) 40%, rgba(${MagicBentoConfig.glowColor}, 0.01) 65%, transparent 70%); z-index: 200; opacity: 0; transform: translate(-50%, -50%); mix-blend-mode: screen;`;
+  document.body.appendChild(spotlight);
+  document.addEventListener('mousemove', e => {
+    if (shouldDisable()) return;
+    const section = grid.closest('.bento-section'); const rect = section?.getBoundingClientRect();
+    const inside = rect && e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+    if (!inside) { gsap.to(spotlight, { opacity: 0, duration: 0.3, ease: 'power2.out' }); cards.forEach(c => c.style.setProperty('--glow-intensity', '0')); return; }
+    const { proximity, fadeDistance } = calculateSpotlightValues(MagicBentoConfig.spotlightRadius);
+    let minDistance = Infinity;
+    cards.forEach(card => {
+      const r = card.getBoundingClientRect(); const cx = r.left + r.width / 2; const cy = r.top + r.height / 2;
+      const distance = Math.hypot(e.clientX - cx, e.clientY - cy) - Math.max(r.width, r.height) / 2;
+      const effective = Math.max(0, distance); minDistance = Math.min(minDistance, effective);
+      let glow = 0; if (effective <= proximity) glow = 1; else if (effective <= fadeDistance) glow = (fadeDistance - effective) / (fadeDistance - proximity);
+      updateCardGlowProperties(card, e.clientX, e.clientY, glow, MagicBentoConfig.spotlightRadius);
+    });
+    gsap.to(spotlight, { left: e.clientX, top: e.clientY, duration: 0.1, ease: 'power2.out' });
+    const opacity = minDistance <= proximity ? 0.8 : minDistance <= fadeDistance ? ((fadeDistance - minDistance) / (fadeDistance - proximity)) * 0.8 : 0;
+    gsap.to(spotlight, { opacity, duration: opacity > 0 ? 0.2 : 0.5, ease: 'power2.out' });
+  });
+}
+</script>
+
+<script>
+    /* --- AJOUT : LOGIQUE POUR LA CARTE 3D ET TEXTE (À PROPOS) --- */
+    const profileCard = document.getElementById('profileCard');
+    if(profileCard) {
+        profileCard.addEventListener('mousemove', (e) => {
+            const rect = profileCard.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+
+            profileCard.style.setProperty('--pc-pointer-x', `${(x / rect.width) * 100}%`);
+            profileCard.style.setProperty('--pc-pointer-y', `${(y / rect.height) * 100}%`);
+            profileCard.style.setProperty('--pc-rotate-x', `${rotateY}deg`);
+            profileCard.style.setProperty('--pc-rotate-y', `${rotateX}deg`);
+            profileCard.style.setProperty('--pc-card-opacity', '1');
+        });
+        profileCard.addEventListener('mouseleave', () => {
+            profileCard.style.setProperty('--pc-card-opacity', '0');
+            profileCard.style.setProperty('--pc-rotate-x', `0deg`);
+            profileCard.style.setProperty('--pc-rotate-y', `0deg`);
+        });
+    }
+
+    // Effet texte scroll
+    gsap.registerPlugin(ScrollTrigger);
+    const initScrollFloat = () => {
+        const container = document.getElementById('scrollFloatText');
+        if(!container) return;
+        const text = container.innerText;
+        container.innerHTML = ''; 
+        const chars = text.split('').map(char => {
+            const span = document.createElement('span');
+            span.className = 'char';
+            span.innerHTML = char === ' ' ? '&nbsp;' : char;
+            container.appendChild(span);
+            return span;
+        });
+        gsap.fromTo(chars,
+            { opacity: 0, yPercent: 120, scaleY: 2.3, scaleX: 0.7, transformOrigin: '50% 0%' },
+            {
+                duration: 1, ease: 'back.inOut(2)', opacity: 1, yPercent: 0, scaleY: 1, scaleX: 1, stagger: 0.03,
+                scrollTrigger: {
+                    trigger: container,
+                    start: 'top bottom-=20%',
+                    end: 'bottom center',
+                    scrub: true
+                }
+            }
+        );
+    };
+    window.addEventListener('DOMContentLoaded', initScrollFloat);
+</script>
+
+</body>
+</html>
