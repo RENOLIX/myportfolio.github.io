@@ -449,6 +449,33 @@
             opacity: 0.3;
             font-size: 0.8rem;
         }
+
+        /* Rend le scroll fluide sur tout le site */
+section {
+    margin-bottom: 120px;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px;
+}
+
+/* INDISPENSABLE : On désactive l'optimisation sur cette section 
+   pour que GSAP puisse calculer l'animation du texte */
+.profile-section {
+    content-visibility: visible !important;
+}
+
+/* On s'assure que les lettres sont bien visibles par défaut */
+.char {
+    display: inline-block;
+    will-change: transform, opacity;
+}
+    /* CE TRUC RENDRA LE SCROLL FLUIDE */
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px; /* Aide le navigateur à anticiper la taille */
+}
+
+.magic-bento-card, .pc-card, .star-border::before, .char {
+    will-change: transform, opacity;
+}
     </style>
 </head>
 <body>
@@ -458,10 +485,11 @@
     <div class="main-container">
         <header>
             <spline-viewer 
-                url="https://prod.spline.design/QJYKkmXBfzYcfVTe/scene.splinecode"
-                hint="false"
-                loading-reveal="true">
-            </spline-viewer>
+    url="https://prod.spline.design/QJYKkmXBfzYcfVTe/scene.splinecode"
+    hint="false"
+    loading="lazy"
+    loading-reveal="true">
+</spline-viewer>
             
             <p class="hero-sub">Mouhammou Abdelghani — 27 Ans</p>
             <h1>SITEMAGIQUE</h1>
@@ -473,13 +501,19 @@
             <div class="grid">
                 <div class="star-border">
                     <div class="card-content">
-                        <iframe class="iframe-container iframe-3d" src="https://my.spline.design/clonemess-9a646c8270914e6b54a01c809618175d/"></iframe>
+                        <iframe class="iframe-container iframe-3d" 
+        src="https://my.spline.design/clonemess-9a646c8270914e6b54a01c809618175d/" 
+        loading="lazy">
+</iframe>
                         <div class="site-info">Modèle Interactif 01</div>
                     </div>
                 </div>
                 <div class="star-border">
                     <div class="card-content">
-                        <iframe class="iframe-container iframe-3d" src="https://my.spline.design/abstractgradientanimation-769039600e95c1a70014a0186940d959/"></iframe>
+                        <iframe class="iframe-container iframe-3d" 
+        src="https://my.spline.design/abstractgradientanimation-769039600e95c1a70014a0186940d959/" 
+        loading="lazy">
+</iframe>
                         <div class="site-info">Modèle Interactif 02</div>
                     </div>
                 </div>
@@ -619,14 +653,25 @@
         });
         window.addEventListener('click', (e) => { for (let i = 0; i < 20; i++) { particles.push(new Particle(e.clientX, e.clientY)); } });
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2); ctx.fill();
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update(); particles[i].draw();
-                if (particles[i].life <= 0) { particles.splice(i, 1); i--; }
+    // Si aucune particule et souris immobile, on économise le GPU
+    if (particles.length > 0 || mouse.x !== null) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white'; 
+        ctx.beginPath(); 
+        ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2); 
+        ctx.fill();
+        
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update(); 
+            particles[i].draw();
+            if (particles[i].life <= 0) { 
+                particles.splice(i, 1); 
+                i--; 
             }
-            requestAnimationFrame(animate);
         }
+    }
+    requestAnimationFrame(animate);
+}
         animate();
     </script>
 
